@@ -20,7 +20,8 @@
     ];
 
     if ($currentUser?->canManageUsers()) {
-        $navItems[] = ['label' => 'User Management', 'route' => 'users.index', 'active' => 'users.*'];
+        $navItems[] = ['label' => 'Users & Roles', 'route' => 'users.index', 'active' => 'users.*'];
+        $navItems[] = ['label' => 'Role Management', 'route' => 'roles.index', 'active' => 'roles.*'];
         $navItems[] = ['label' => 'Audit Log', 'route' => 'audit-logs.index', 'active' => 'audit-logs.*'];
     }
 @endphp
@@ -42,7 +43,7 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                     <div class="font-semibold">@yield('title', 'Dashboard')</div>
-                    <div class="text-xs text-slate-500">{{ $currentUser?->name }} · {{ $currentUser?->roleLabel() }}</div>
+                    <div class="text-xs text-slate-500">{{ $currentUser?->name }} - {{ $currentUser?->roleLabel() }}</div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="flex gap-2 overflow-x-auto md:hidden">

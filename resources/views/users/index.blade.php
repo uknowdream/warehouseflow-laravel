@@ -6,7 +6,11 @@
         <h1 class="text-2xl font-bold">User Management</h1>
         <p class="text-sm text-slate-500">Kelola akses tim, status akun, dan role operasional.</p>
     </div>
-    <a href="{{ route('users.create') }}" class="rounded-lg bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white">Tambah User</a>
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ route('roles.index') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-semibold text-slate-700">Role Management</a>
+        <a href="{{ route('audit-logs.index') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-semibold text-slate-700">Audit Log</a>
+        <a href="{{ route('users.create') }}" class="rounded-lg bg-slate-950 px-4 py-2 text-center text-sm font-semibold text-white">Tambah User</a>
+    </div>
 </div>
 
 <div class="mb-5 grid gap-3 md:grid-cols-4">

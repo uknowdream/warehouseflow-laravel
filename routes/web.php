@@ -5,6 +5,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockMoveController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\UserController;
@@ -33,6 +34,9 @@ Route::middleware(['auth'])->group(function () {
         ->except(['index', 'show'])
         ->middleware('master-data');
     Route::resource('users', UserController::class)->except(['show'])->middleware('admin');
+    Route::get('roles', [RoleController::class, 'index'])
+        ->middleware('admin')
+        ->name('roles.index');
     Route::get('audit-logs', [AuditLogController::class, 'index'])
         ->middleware('admin')
         ->name('audit-logs.index');

@@ -6,7 +6,11 @@
 <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
         <h1 class="text-2xl font-bold">Audit Log</h1>
-        <p class="text-sm text-slate-500">Jejak create, update, dan delete untuk data operasional warehouse.</p>
+        <p class="text-sm text-slate-500">Jejak create, update, delete, login, dan logout untuk data operasional warehouse.</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{{ route('users.index') }}" class="rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white">User Management</a>
+        <a href="{{ route('roles.index') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">Role Management</a>
     </div>
 </div>
 

@@ -38,7 +38,12 @@ class AuditLogController extends Controller
             'search' => $search,
             'selectedEvent' => $event,
             'selectedModel' => $model,
-            'events' => ['created' => 'Created', 'updated' => 'Updated', 'deleted' => 'Deleted'],
+            'events' => AuditLog::query()
+                ->select('event')
+                ->distinct()
+                ->orderBy('event')
+                ->pluck('event', 'event')
+                ->map(fn (string $event) => str($event)->replace('_', ' ')->headline()->toString()),
             'models' => AuditLog::query()
                 ->select('auditable_type')
                 ->distinct()

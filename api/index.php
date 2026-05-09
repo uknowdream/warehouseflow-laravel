@@ -31,7 +31,12 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 
 if (getenv('VERCEL') && getenv('DB_CONNECTION') === 'sqlite' && str_starts_with((string) getenv('DB_DATABASE'), '/tmp/')) {
     $database = getenv('DB_DATABASE');
-    $marker = '/tmp/warehouseflow_database_ready';
+    $migrationFiles = glob(__DIR__.'/../database/migrations/*.php') ?: [];
+    $migrationSignature = md5(implode('|', array_map(
+        fn (string $file): string => basename($file).':'.filemtime($file),
+        $migrationFiles
+    )));
+    $marker = '/tmp/warehouseflow_database_ready_'.$migrationSignature;
 
     if (! file_exists($database)) {
         touch($database);

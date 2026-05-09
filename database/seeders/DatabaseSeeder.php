@@ -16,12 +16,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(['email' => 'test@example.com'], [
-            'name' => 'Test User',
-            'role' => User::ROLE_ADMIN,
-            'is_active' => true,
-            'email_verified_at' => now(),
-            'password' => Hash::make('password'),
-        ]);
+        foreach ([
+            ['name' => 'Admin Warehouse', 'email' => 'test@example.com', 'role' => User::ROLE_ADMIN],
+            ['name' => 'Supervisor Gudang', 'email' => 'supervisor@example.com', 'role' => User::ROLE_SUPERVISOR],
+            ['name' => 'Operator Inbound', 'email' => 'operator@example.com', 'role' => User::ROLE_STAFF],
+            ['name' => 'Viewer Audit', 'email' => 'viewer@example.com', 'role' => User::ROLE_VIEWER],
+        ] as $user) {
+            User::updateOrCreate(['email' => $user['email']], [
+                'name' => $user['name'],
+                'role' => $user['role'],
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+            ]);
+        }
+
+        $this->call(WarehouseFlowSeeder::class);
     }
 }

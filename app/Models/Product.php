@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivityLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use RecordsActivityLogs;
+
     protected $fillable = [
         'category_id', 'unit_id', 'code', 'name', 'qr_code', 'photo', 'is_active'
     ];
@@ -29,6 +32,16 @@ class Product extends Model
     public function stockBalances(): HasMany
     {
         return $this->hasMany(StockBalance::class);
+    }
+
+    public function stockMoves(): HasMany
+    {
+        return $this->hasMany(StockMove::class);
+    }
+
+    public function stockOpnameLines(): HasMany
+    {
+        return $this->hasMany(StockOpnameLine::class);
     }
 
     public function totalStock(): float

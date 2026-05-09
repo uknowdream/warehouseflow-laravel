@@ -31,7 +31,10 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 
 if (getenv('VERCEL') && getenv('DB_CONNECTION') === 'sqlite' && str_starts_with((string) getenv('DB_DATABASE'), '/tmp/')) {
     $database = getenv('DB_DATABASE');
-    $migrationFiles = glob(__DIR__.'/../database/migrations/*.php') ?: [];
+    $migrationFiles = array_merge(
+        glob(__DIR__.'/../database/migrations/*.php') ?: [],
+        glob(__DIR__.'/../database/seeders/*.php') ?: []
+    );
     $migrationSignature = md5(implode('|', array_map(
         fn (string $file): string => basename($file).':'.filemtime($file),
         $migrationFiles

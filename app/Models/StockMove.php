@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivityLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockMove extends Model
 {
+    use RecordsActivityLogs;
+
     protected $fillable = [
         'transaction_no', 'transaction_type', 'product_id', 'warehouse_id',
         'location_id', 'qty_in', 'qty_out', 'reference_no', 'note', 'created_by'

@@ -21,6 +21,7 @@
 
     if ($currentUser?->canManageUsers()) {
         $navItems[] = ['label' => 'User Management', 'route' => 'users.index', 'active' => 'users.*'];
+        $navItems[] = ['label' => 'Audit Log', 'route' => 'audit-logs.index', 'active' => 'audit-logs.*'];
     }
 @endphp
 <div class="min-h-screen flex">

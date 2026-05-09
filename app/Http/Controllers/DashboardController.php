@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Models\AuditLog;
 use App\Models\Product;
 use App\Models\StockBalance;
 use App\Models\StockMove;
@@ -74,6 +75,8 @@ class DashboardController extends Controller
             'inactiveUsers' => User::where('is_active', false)->count(),
             'latestUsers' => User::latest('last_login_at')->latest()->take(5)->get(),
             'roleOptions' => User::roleOptions(),
+            'latestAuditLogs' => AuditLog::with('user')->latest()->take(5)->get(),
+            'auditLogCountToday' => AuditLog::whereDate('created_at', today())->count(),
         ]);
     }
 }

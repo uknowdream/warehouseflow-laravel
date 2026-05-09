@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -32,6 +33,9 @@ Route::middleware(['auth'])->group(function () {
         ->except(['index', 'show'])
         ->middleware('master-data');
     Route::resource('users', UserController::class)->except(['show'])->middleware('admin');
+    Route::get('audit-logs', [AuditLogController::class, 'index'])
+        ->middleware('admin')
+        ->name('audit-logs.index');
 
     Route::get('stock-moves', [StockMoveController::class, 'index'])->name('stock-moves.index');
     Route::middleware('stock-operator')->group(function () {

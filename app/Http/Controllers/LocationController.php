@@ -5,13 +5,44 @@ namespace App\Http\Controllers;
 use App\Models\Location;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class LocationController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
+        $search = $request->query('search');
+        $warehouseId = $request->query('warehouse_id');
+        $status = $request->query('status');
+
         return view('locations.index', [
-            'locations' => Location::with('warehouse')->latest()->paginate(15)
+            'locations' => Location::query()
+                ->with('warehouse')
+                ->withSum('stockBalances as total_stock', 'qty')
+                ->when($search, function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%")
+                            ->orWhere('area', 'like', "%{$search}%")
+                            ->orWhere('rack', 'like', "%{$search}%");
+                    });
+                })
+                ->when($warehouseId, fn ($query, string $warehouseId) => $query->where('warehouse_id', $warehouseId))
+                ->when($status === 'active', fn ($query) => $query->where('is_active', true))
+                ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'search' => $search,
+            'selectedWarehouse' => $warehouseId,
+            'selectedStatus' => $status,
+            'summary' => [
+                'total' => Location::count(),
+                'active' => Location::where('is_active', true)->count(),
+                'inactive' => Location::where('is_active', false)->count(),
+            ],
         ]);
     }
 
@@ -19,7 +50,7 @@ class LocationController extends Controller
     {
         return view('locations.form', [
             'location' => new Location(),
-            'warehouses' => Warehouse::orderBy('name')->get(),
+            'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -49,8 +80,12 @@ class LocationController extends Controller
         return redirect()->route('locations.index')->with('success', 'Lokasi berhasil diperbarui.');
     }
 
-    public function destroy(Location $location)
+    public function destroy(Location $location): RedirectResponse
     {
+        if ($location->stockBalances()->where('qty', '>', 0)->exists() || $location->stockMoves()->exists() || $location->stockOpnameLines()->exists()) {
+            return back()->withErrors('Lokasi sudah dipakai transaksi. Nonaktifkan lokasi jika tidak ingin digunakan lagi.');
+        }
+
         $location->delete();
         return back()->with('success', 'Lokasi berhasil dihapus.');
     }
@@ -62,7 +97,7 @@ class LocationController extends Controller
 
     private function validated(Request $request, ?int $ignoreId = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'warehouse_id' => ['required', 'exists:warehouses,id'],
             'code' => ['required', 'string', 'max:100', 'unique:locations,code,' . $ignoreId],
             'name' => ['required', 'string', 'max:255'],
@@ -70,5 +105,9 @@ class LocationController extends Controller
             'rack' => ['nullable', 'string', 'max:100'],
             'is_active' => ['nullable', 'boolean'],
         ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+
+        return $data;
     }
 }

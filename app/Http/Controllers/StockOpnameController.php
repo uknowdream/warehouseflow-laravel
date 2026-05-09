@@ -14,17 +14,51 @@ use Illuminate\Support\Facades\DB;
 
 class StockOpnameController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->query('search');
+        $status = $request->query('status');
+        $warehouseId = $request->query('warehouse_id');
+
         return view('stock-opnames.index', [
-            'sessions' => StockOpnameSession::with('warehouse')->latest()->paginate(15)
+            'sessions' => StockOpnameSession::query()
+                ->with(['warehouse', 'creator', 'approver'])
+                ->withCount('lines')
+                ->when($search, function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('opname_no', 'like', "%{$search}%")
+                            ->orWhere('note', 'like', "%{$search}%");
+                    });
+                })
+                ->when($status, fn ($query, string $status) => $query->where('status', $status))
+                ->when($warehouseId, fn ($query, string $warehouseId) => $query->where('warehouse_id', $warehouseId))
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'search' => $search,
+            'selectedStatus' => $status,
+            'selectedWarehouse' => $warehouseId,
+            'statusOptions' => [
+                'draft' => 'Draft',
+                'running' => 'Berjalan',
+                'waiting_approval' => 'Menunggu Approval',
+                'done' => 'Selesai',
+                'rejected' => 'Ditolak',
+            ],
+            'summary' => [
+                'total' => StockOpnameSession::count(),
+                'running' => StockOpnameSession::where('status', 'running')->count(),
+                'waiting' => StockOpnameSession::where('status', 'waiting_approval')->count(),
+                'done' => StockOpnameSession::where('status', 'done')->count(),
+            ],
         ]);
     }
 
     public function create()
     {
         return view('stock-opnames.form', [
-            'warehouses' => Warehouse::orderBy('name')->get()
+            'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get()
         ]);
     }
 

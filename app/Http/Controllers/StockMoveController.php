@@ -12,10 +12,48 @@ use RuntimeException;
 
 class StockMoveController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->query('search');
+        $type = $request->query('type');
+        $warehouseId = $request->query('warehouse_id');
+        $date = $request->query('date');
+
         return view('stock-moves.index', [
-            'moves' => StockMove::with(['product', 'warehouse', 'location', 'user'])->latest()->paginate(20)
+            'moves' => StockMove::query()
+                ->with(['product', 'warehouse', 'location', 'user'])
+                ->when($search, function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('transaction_no', 'like', "%{$search}%")
+                            ->orWhere('note', 'like', "%{$search}%")
+                            ->orWhereHas('product', fn ($query) => $query->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"))
+                            ->orWhereHas('location', fn ($query) => $query->where('code', 'like', "%{$search}%"));
+                    });
+                })
+                ->when($type, fn ($query, string $type) => $query->where('transaction_type', $type))
+                ->when($warehouseId, fn ($query, string $warehouseId) => $query->where('warehouse_id', $warehouseId))
+                ->when($date, fn ($query, string $date) => $query->whereDate('created_at', $date))
+                ->latest()
+                ->paginate(20)
+                ->withQueryString(),
+            'search' => $search,
+            'selectedType' => $type,
+            'selectedWarehouse' => $warehouseId,
+            'selectedDate' => $date,
+            'warehouses' => Warehouse::orderBy('name')->get(),
+            'types' => [
+                'IN' => 'Barang Masuk',
+                'OUT' => 'Barang Keluar',
+                'TRANSFER_IN' => 'Transfer Masuk',
+                'TRANSFER_OUT' => 'Transfer Keluar',
+                'ADJUSTMENT' => 'Adjustment',
+            ],
+            'summary' => [
+                'total' => StockMove::count(),
+                'today' => StockMove::whereDate('created_at', today())->count(),
+                'inToday' => StockMove::whereDate('created_at', today())->sum('qty_in'),
+                'outToday' => StockMove::whereDate('created_at', today())->sum('qty_out'),
+            ],
         ]);
     }
 
@@ -83,9 +121,9 @@ class StockMoveController extends Controller
     private function data(): array
     {
         return [
-            'products' => Product::orderBy('name')->get(),
-            'warehouses' => Warehouse::orderBy('name')->get(),
-            'locations' => Location::with('warehouse')->orderBy('code')->get(),
+            'products' => Product::where('is_active', true)->orderBy('name')->get(),
+            'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(),
+            'locations' => Location::with('warehouse')->where('is_active', true)->orderBy('code')->get(),
         ];
     }
 

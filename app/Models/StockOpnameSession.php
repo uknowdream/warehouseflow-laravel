@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivityLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StockOpnameSession extends Model
 {
+    use RecordsActivityLogs;
+
     protected $fillable = [
         'opname_no', 'warehouse_id', 'status', 'started_at',
         'finished_at', 'created_by', 'approved_by', 'note'

@@ -153,6 +153,26 @@
                 @endforeach
             </div>
         </div>
+
+        <div class="rounded-lg bg-white p-5 shadow-sm">
+            <div class="mb-1 flex items-center justify-between">
+                <div class="font-semibold">Audit Log</div>
+                @if(auth()->user()?->canManageUsers())
+                    <a href="{{ route('audit-logs.index') }}" class="text-sm font-semibold text-slate-700">Lihat</a>
+                @endif
+            </div>
+            <div class="mb-3 text-sm text-slate-500">{{ $auditLogCountToday }} aktivitas hari ini</div>
+            <div class="space-y-3">
+                @forelse($latestAuditLogs as $log)
+                    <div class="border-b border-slate-100 pb-2 text-sm last:border-0 last:pb-0">
+                        <div class="font-medium">{{ ucfirst($log->event) }} {{ class_basename($log->auditable_type) }}</div>
+                        <div class="text-xs text-slate-500">{{ $log->label }} · {{ $log->user->name ?? 'System' }}</div>
+                    </div>
+                @empty
+                    <div class="text-sm text-slate-500">Belum ada aktivitas.</div>
+                @endforelse
+            </div>
+        </div>
     </div>
 </div>
 

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsActivityLogs;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockOpnameLine extends Model
 {
+    use RecordsActivityLogs;
+
     protected $fillable = [
         'opname_session_id', 'product_id', 'location_id',
         'system_qty', 'physical_qty', 'difference_qty',

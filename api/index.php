@@ -29,4 +29,20 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+if (getenv('VERCEL') && getenv('DB_CONNECTION') === 'sqlite' && str_starts_with((string) getenv('DB_DATABASE'), '/tmp/')) {
+    $database = getenv('DB_DATABASE');
+    $marker = '/tmp/warehouseflow_database_ready';
+
+    if (! file_exists($database)) {
+        touch($database);
+    }
+
+    if (! file_exists($marker)) {
+        $kernel = $app->make('Illuminate\\Contracts\\Console\\Kernel');
+        $kernel->call('migrate', ['--force' => true]);
+        $kernel->call('db:seed', ['--force' => true]);
+        file_put_contents($marker, '1');
+    }
+}
+
 $app->handleRequest(Request::capture());

@@ -3,11 +3,13 @@
 @section('content')
 <div class="flex flex-wrap gap-2 justify-between mb-4">
     <h1 class="text-2xl font-bold">Mutasi Stok</h1>
-    <div class="space-x-2">
-        <a href="{{ route('stock-moves.in.create') }}" class="px-4 py-2 bg-green-700 text-white rounded-xl">Barang Masuk</a>
-        <a href="{{ route('stock-moves.out.create') }}" class="px-4 py-2 bg-red-700 text-white rounded-xl">Barang Keluar</a>
-        <a href="{{ route('stock-moves.transfer.create') }}" class="px-4 py-2 bg-blue-700 text-white rounded-xl">Transfer</a>
-    </div>
+    @if(auth()->user()?->canOperateStock())
+        <div class="space-x-2">
+            <a href="{{ route('stock-moves.in.create') }}" class="rounded-lg bg-green-700 px-4 py-2 text-white">Barang Masuk</a>
+            <a href="{{ route('stock-moves.out.create') }}" class="rounded-lg bg-red-700 px-4 py-2 text-white">Barang Keluar</a>
+            <a href="{{ route('stock-moves.transfer.create') }}" class="rounded-lg bg-blue-700 px-4 py-2 text-white">Transfer</a>
+        </div>
+    @endif
 </div>
 <div class="bg-white rounded-2xl shadow overflow-hidden">
 <table class="w-full text-sm">

@@ -24,10 +24,14 @@
 </table>
 </div>
 
-@if($session->status === 'waiting_approval')
+@if($session->status === 'waiting_approval' && auth()->user()?->canApproveStockOpnames())
 <div class="flex gap-3 mt-6">
     <form method="POST" action="{{ route('stock-opnames.approve', $session) }}">@csrf<button class="px-5 py-3 bg-green-700 text-white rounded-xl">Approve Adjustment</button></form>
     <form method="POST" action="{{ route('stock-opnames.reject', $session) }}">@csrf<button class="px-5 py-3 bg-red-700 text-white rounded-xl">Reject</button></form>
+</div>
+@elseif($session->status === 'waiting_approval')
+<div class="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+    Menunggu approval dari Admin atau Supervisor.
 </div>
 @endif
 @endsection

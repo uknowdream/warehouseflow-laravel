@@ -3,7 +3,9 @@
 @section('content')
 <div class="flex justify-between mb-4">
     <h1 class="text-2xl font-bold">Warehouse</h1>
-    <a href="{{ route('warehouses.create') }}" class="px-4 py-2 bg-slate-950 text-white rounded-xl">Tambah Warehouse</a>
+    @if(auth()->user()?->canManageMasterData())
+        <a href="{{ route('warehouses.create') }}" class="rounded-lg bg-slate-950 px-4 py-2 text-white">Tambah Warehouse</a>
+    @endif
 </div>
 <div class="bg-white rounded-2xl shadow overflow-hidden">
 <table class="w-full text-sm">
@@ -14,7 +16,13 @@
 <td class="p-3">{{ $warehouse->code }}</td>
 <td class="p-3">{{ $warehouse->name }}</td>
 <td class="p-3">{{ $warehouse->address }}</td>
-<td class="p-3 text-center"><a class="text-yellow-600" href="{{ route('warehouses.edit', $warehouse) }}">Edit</a></td>
+<td class="p-3 text-center">
+@if(auth()->user()?->canManageMasterData())
+    <a class="text-yellow-600" href="{{ route('warehouses.edit', $warehouse) }}">Edit</a>
+@else
+    <span class="text-slate-400">Read only</span>
+@endif
+</td>
 </tr>
 @endforeach
 </tbody>

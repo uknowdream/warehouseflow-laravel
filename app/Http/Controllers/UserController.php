@@ -16,6 +16,8 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $search = $request->query('search');
+        $role = $request->query('role');
+        $status = $request->query('status');
 
         $users = User::query()
             ->when($search, function ($query, string $search): void {
@@ -25,13 +27,26 @@ class UserController extends Controller
                         ->orWhere('role', 'like', "%{$search}%");
                 });
             })
+            ->when($role, fn ($query, string $role) => $query->where('role', $role))
+            ->when($status === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
+        $summary = [
+            'total' => User::count(),
+            'active' => User::where('is_active', true)->count(),
+            'inactive' => User::where('is_active', false)->count(),
+            'admins' => User::where('role', User::ROLE_ADMIN)->count(),
+        ];
+
         return view('users.index', [
             'users' => $users,
             'search' => $search,
+            'selectedRole' => $role,
+            'selectedStatus' => $status,
+            'summary' => $summary,
             'roleOptions' => User::roleOptions(),
         ]);
     }
@@ -39,8 +54,9 @@ class UserController extends Controller
     public function create(): View
     {
         return view('users.form', [
-            'user' => new User(['role' => User::ROLE_STAFF]),
+            'user' => new User(['role' => User::ROLE_STAFF, 'is_active' => true]),
             'roleOptions' => User::roleOptions(),
+            'roleDescriptions' => User::roleDescriptions(),
         ]);
     }
 
@@ -59,15 +75,24 @@ class UserController extends Controller
         return view('users.form', [
             'user' => $user,
             'roleOptions' => User::roleOptions(),
+            'roleDescriptions' => User::roleDescriptions(),
         ]);
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $this->validated($request, $user);
+        $nextRole = $data['role'] ?? $user->role;
+        $nextActive = $data['is_active'] ?? $user->is_active;
 
-        if ($user->role === User::ROLE_ADMIN && ($data['role'] ?? null) !== User::ROLE_ADMIN) {
-            $this->ensureAnotherAdminExists($user);
+        if ($request->user()->is($user) && ($nextRole !== User::ROLE_ADMIN || ! $nextActive)) {
+            throw ValidationException::withMessages([
+                'role' => 'Admin yang sedang login tidak bisa menurunkan role atau menonaktifkan akunnya sendiri.',
+            ]);
+        }
+
+        if ($user->isAdmin() && ($nextRole !== User::ROLE_ADMIN || ! $nextActive)) {
+            $this->ensureAnotherActiveAdminExists($user);
         }
 
         if (blank($data['password'] ?? null)) {
@@ -87,8 +112,8 @@ class UserController extends Controller
             return back()->withErrors('User yang sedang login tidak bisa dihapus.');
         }
 
-        if ($user->role === User::ROLE_ADMIN) {
-            $this->ensureAnotherAdminExists($user);
+        if ($user->isAdmin()) {
+            $this->ensureAnotherActiveAdminExists($user);
         }
 
         $user->delete();
@@ -102,7 +127,7 @@ class UserController extends Controller
             ? ['nullable', 'confirmed', Password::defaults()]
             : ['required', 'confirmed', Password::defaults()];
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -113,17 +138,25 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user),
             ],
             'role' => ['required', Rule::in(array_keys(User::roleOptions()))],
+            'is_active' => ['nullable', 'boolean'],
             'password' => $passwordRules,
         ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+
+        return $data;
     }
 
-    private function ensureAnotherAdminExists(User $user): void
+    private function ensureAnotherActiveAdminExists(User $user): void
     {
-        $adminCount = User::where('role', User::ROLE_ADMIN)->whereKeyNot($user->id)->count();
+        $adminCount = User::where('role', User::ROLE_ADMIN)
+            ->where('is_active', true)
+            ->whereKeyNot($user->id)
+            ->count();
 
         if ($adminCount === 0) {
             throw ValidationException::withMessages([
-                'role' => 'Minimal harus ada satu user admin.',
+                'role' => 'Minimal harus ada satu admin aktif.',
             ]);
         }
     }

@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'approve-opname' => \App\Http\Middleware\EnsureUserCanApproveStockOpname::class,
+            'master-data' => \App\Http\Middleware\EnsureUserCanManageMasterData::class,
+            'stock-operator' => \App\Http\Middleware\EnsureUserCanOperateStock::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
